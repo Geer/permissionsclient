@@ -59,7 +59,7 @@
           <v-pagination
             v-model="resultObject.currentPage"
             @input="changePage()"
-            :length="resultObject.totalCount > 0 ? (resultObject.totalCount/resultObject.size) : 0"
+            :length="resultObject.totalCount > 0 ? parseInt((resultObject.totalCount/resultObject.size))+1 : 0"
             :total-visible="0"
           ></v-pagination>
         </div>
