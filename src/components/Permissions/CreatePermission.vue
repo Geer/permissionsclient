@@ -68,15 +68,14 @@
                 v-model="menu"
                 :close-on-content-click="false"
                 reactive
-                :return-value.sync="permission.date"
                 transition="scale-transition"
                 offset-y
                 min-width="auto"
               >
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field
-                    v-model="permission.date"
-                    
+                   v-model="dateStr"
+                    @blur="permission.date = parseDate(dateStr)"
                     label="Picker in menu"
                     prepend-icon="mdi-calendar"
                     readonly
@@ -90,6 +89,8 @@
                   v-model="permission.date"
                   no-title
                   scrollable
+                  :locale="'es'"
+                  @input="dateChange($event)"
                 >
                   <v-spacer></v-spacer>
                   <v-btn
@@ -97,7 +98,7 @@
                     color="primary"
                     @click="menu = false"
                   >
-                    Cancel
+                    Clean form
                   </v-btn>
                   <v-btn
                     text
@@ -138,6 +139,7 @@
 <script>
 
 import axios from 'axios'
+import moment from 'moment'
 
   export default {
     data: () => ({
@@ -153,10 +155,10 @@ import axios from 'axios'
       valid: true,
       menu: false,
       modal: false,
-      menu2: false,
       loadComplete: false,
       snackbar: false,
       snackbarText: '',
+      dateStr: '',
 
       permissionTypes: [],
 
@@ -178,14 +180,49 @@ import axios from 'axios'
       ]
       
     }),
+    filters: {
+      moment: function(date) {
+        return moment(date).format("DD/MM/YYYY");
+      }
+    },
     methods: {
-      
+      dateChange() {
+        this.dateStr = this.formatDate(this.permission.date);
+        this.menu = false;
+      },
+      formatDate(date) {
+        if (!date) return null;
+
+        return moment(this.permission.date).format("DD/MM/YYYY");
+      },
+      parseDate(date) {
+        if (!date) return null;
+        var dateSplit = date.split("/");
+        if (dateSplit.length != 3 || dateSplit[2].length != 4) {
+          return null;
+        }
+
+        const [day, month, year] = dateSplit;
+        const formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(
+          2,
+          "0"
+        )}`;
+        if (isNaN(Date.parse(formattedDate))) {
+          return null;
+        }
+
+        if (parseInt(dateSplit[2]) < 1000) {
+          return null;
+        }
+        return formattedDate;
+      },
       reset () {
         this.$refs.form.reset()
       },
       submit(){
+        console.log(this.permission)
+        this.$refs.form.validate()
         if (this.$route.params.id === undefined) {
-          this.$refs.form.validate()
           axios.post(`${this.baseUrl}/permission`, this.permission)
           .then(res=>{
             console.log(res)
@@ -197,7 +234,6 @@ import axios from 'axios'
           })
         }
         else {
-          this.$refs.form.validate()
           axios.put(`${this.baseUrl}/permission/${this.permission.id}`, this.permission)
           .then(res=>{
             console.log(res)
@@ -236,6 +272,7 @@ import axios from 'axios'
           .then(res => {
             self.permission = res.data
             console.log(self.permission)
+            self.dateStr = this.formatDate(self.permission.date);
           })
           .catch(ex => {
             self.showError(ex.message)

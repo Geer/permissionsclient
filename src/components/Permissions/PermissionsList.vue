@@ -91,7 +91,7 @@
               <td>{{ item.employeeFirstName }}</td>
               <td>{{ item.employeeLastName }}</td>
               <td>{{ item.permissionTypeName }}</td>
-              <td>{{ item.date }}</td>
+              <td>{{ item.dateStr }}</td>
               <td>
                 <v-icon
                   small
